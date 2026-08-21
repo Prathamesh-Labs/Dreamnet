@@ -3,6 +3,7 @@ from typing import Any
 import json
 from app.services.llm.base import BaseLLMProvider
 from app.engines.hypothesis.schemas import HypothesisEngineResponse
+from app.engines.experiment.schemas import ExperimentEngineResponse
 
 class GeminiProvider(BaseLLMProvider):
     def __init__(self, api_key: str):
@@ -37,3 +38,35 @@ class GeminiProvider(BaseLLMProvider):
         except Exception as e:
             print(f"[GeminiProvider] Error generating hypotheses: {e}")
             raise e
+
+    def design_experiment(self, hypothesis: dict[str, Any]) -> dict[str, Any]:
+        print(f"[GeminiProvider] Designing experiment for hypothesis: '{hypothesis.get('statement')}'")
+        prompt = (
+            f"You are DREAMNET, an autonomous scientific discovery assistant.\n"
+            f"Given the scientific hypothesis details below, design a structured, testable, "
+            f"and reproducible experiment specification.\n\n"
+            f"Hypothesis Statement:\n{hypothesis.get('statement')}\n\n"
+            f"Rationale:\n{hypothesis.get('rationale')}\n\n"
+            f"Predicted Outcome:\n{hypothesis.get('predicted_outcome')}\n\n"
+            f"Boundary Assumptions:\n{', '.join(hypothesis.get('assumptions', []))}\n\n"
+            f"Variables:\n{', '.join(hypothesis.get('variables', []))}\n\n"
+            f"Ensure the generated experiment provides complete details for: objective, baseline, "
+            f"treatment, dataset, metrics, expected outcome, measurable success criteria, and a "
+            f"step-by-step procedure list. Categorize variables clearly into independent, dependent, and control."
+        )
+        
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=ExperimentEngineResponse,
+                    temperature=0.7
+                )
+            )
+            data = json.loads(response.text)
+            return data
+        except Exception as e:
+            print(f"[GeminiProvider] Error designing experiment: {e}")
+            raise e
+

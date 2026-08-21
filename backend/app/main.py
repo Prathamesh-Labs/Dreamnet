@@ -5,6 +5,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.database.connection import get_db, engine, Base
 from app.api.questions import router as questions_router
+from app.api.hypotheses import router as hypotheses_router
 import app.database.base  # Register models
 
 app = FastAPI(
@@ -15,6 +16,9 @@ app = FastAPI(
 
 app.include_router(questions_router)
 app.include_router(questions_router, prefix="/api")
+app.include_router(hypotheses_router)
+app.include_router(hypotheses_router, prefix="/api")
+
 
 # Set up CORS
 app.add_middleware(

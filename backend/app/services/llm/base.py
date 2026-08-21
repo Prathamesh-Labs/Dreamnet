@@ -18,3 +18,27 @@ class BaseLLMProvider(ABC):
         }
         """
         pass
+
+    @abstractmethod
+    def design_experiment(self, hypothesis: dict[str, Any]) -> dict[str, Any]:
+        """
+        Given a hypothesis dictionary, design a structured experiment.
+        Should return a dictionary matching the Experiment schema:
+        {
+            "objective": str,
+            "baseline": str,
+            "treatment": str,
+            "variables": {
+                "independent": list[str],
+                "dependent": list[str],
+                "control": list[str]
+            },
+            "dataset": str,
+            "metrics": list[str],
+            "procedure": list[str],
+            "expected_outcome": str,
+            "measurable_success_criteria": str
+        }
+        """
+        pass
+

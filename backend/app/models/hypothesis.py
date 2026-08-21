@@ -21,3 +21,5 @@ class Hypothesis(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     question = relationship("Question", backref="hypotheses")
+    experiment = relationship("Experiment", back_populates="hypothesis", uselist=False, cascade="all, delete-orphan")
+
