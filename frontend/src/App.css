@@ -1046,4 +1046,158 @@ body {
   margin: 0;
 }
 
+/* Run Experiment Button */
+.run-exp-btn {
+  background: linear-gradient(135deg, var(--status-green) 0%, hsl(145, 80%, 35%) 100%);
+  color: var(--text-bright);
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 1rem;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--status-green-glow);
+  transition: all 0.2s;
+}
+
+.run-exp-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.run-exp-btn:disabled {
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  border: 1px solid var(--border-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Sandbox Terminal Console */
+.sandbox-logs-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.terminal-window {
+  background-color: #080a0f;
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-header {
+  background-color: #121620;
+  border-bottom: 1px solid var(--border-muted);
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terminal-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.term-btn {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.term-btn.red { background-color: #ff5f56; }
+.term-btn.yellow { background-color: #ffbd2e; }
+.term-btn.green { background-color: #27c93f; }
+
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.terminal-timer {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-purple);
+  font-weight: 600;
+}
+
+.terminal-content {
+  margin: 0;
+  padding: 1rem;
+  max-height: 250px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: left;
+  background-color: #080a0f;
+}
+
+.terminal-content code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  display: block;
+}
+
+.pulsing-text {
+  color: var(--status-yellow);
+  animation: terminal-pulse 1.5s infinite;
+}
+
+@keyframes terminal-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1.0; }
+  100% { opacity: 0.6; }
+}
+
+/* Extracted Metrics block */
+.extracted-metrics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background-color: hsla(145, 80%, 45%, 0.03);
+  border: 1px solid hsla(145, 80%, 45%, 0.15);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.metrics-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.metric-pill-item {
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-muted);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.metric-key {
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.metric-val {
+  font-family: var(--font-mono);
+  color: var(--status-green);
+  font-weight: 600;
+}
+
+
 

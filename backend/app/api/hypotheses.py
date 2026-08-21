@@ -3,9 +3,12 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from app.database.connection import get_db
 from app.schemas.experiment import ExperimentOut
+from app.schemas.experiment_result import ExperimentResultOut
 from app.models.experiment import Experiment
+from app.models.experiment_result import ExperimentResult
 from app.services.experiment.designer import ExperimentDesigner
 from app.services.experiment.validator import ExperimentValidationError
+from app.services.experiment.runner import ExperimentRunner
 
 router = APIRouter()
 
@@ -47,3 +50,38 @@ def get_hypothesis_experiment(hypothesis_id: UUID, db: Session = Depends(get_db)
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
         )
+
+@router.post("/experiments/{experiment_id}/run", response_model=ExperimentResultOut)
+def run_hypothesis_experiment(experiment_id: UUID, db: Session = Depends(get_db)):
+    try:
+        result = ExperimentRunner.run_experiment(experiment_id, db)
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error executing experiment: {str(e)}"
+        )
+
+@router.get("/experiments/{experiment_id}/results", response_model=ExperimentResultOut)
+def get_experiment_results(experiment_id: UUID, db: Session = Depends(get_db)):
+    try:
+        result = db.query(ExperimentResult).filter(ExperimentResult.experiment_id == experiment_id).first()
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Experiment results not found."
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+

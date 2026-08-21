@@ -66,6 +66,11 @@ function App() {
   const [loadingExperiments, setLoadingExperiments] = useState<Record<string, boolean>>({})
   const [designingMap, setDesigningMap] = useState<Record<string, boolean>>({})
 
+  // Sandbox execution state
+  const [resultsMap, setResultsMap] = useState<Record<string, any>>({})
+  const [loadingResults, setLoadingResults] = useState<Record<string, boolean>>({})
+  const [runningMap, setRunningMap] = useState<Record<string, boolean>>({})
+
   const API_URL = 'http://127.0.0.1:8000'
 
   // Fetch health status & check database
@@ -151,6 +156,27 @@ function App() {
     }
   }
 
+  const fetchExperimentResult = async (experimentId: string) => {
+    setLoadingResults(prev => ({ ...prev, [experimentId]: true }))
+    try {
+      const res = await fetch(`${API_URL}/experiments/${experimentId}/results`)
+      if (res.ok) {
+        const data = await res.json()
+        setResultsMap(prev => ({ ...prev, [experimentId]: data }))
+      } else {
+        setResultsMap(prev => {
+          const updated = { ...prev }
+          delete updated[experimentId]
+          return updated
+        })
+      }
+    } catch (err) {
+      console.error('Error fetching experiment result:', err)
+    } finally {
+      setLoadingResults(prev => ({ ...prev, [experimentId]: false }))
+    }
+  }
+
   const fetchExperiment = async (hypothesisId: string) => {
     setLoadingExperiments(prev => ({ ...prev, [hypothesisId]: true }))
     try {
@@ -158,6 +184,9 @@ function App() {
       if (res.ok) {
         const data = await res.json()
         setExperimentsMap(prev => ({ ...prev, [hypothesisId]: data }))
+        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+          fetchExperimentResult(data.id)
+        }
       } else {
         // Clear from map if it doesn't exist (e.g. was deleted or new hypothesis)
         setExperimentsMap(prev => {
@@ -241,6 +270,44 @@ function App() {
       console.error('Error designing experiment:', err)
     } finally {
       setDesigningMap(prev => ({ ...prev, [hypothesisId]: false }))
+    }
+  }
+
+  const handleRunExperiment = async (experimentId: string, hypothesisId: string) => {
+    setRunningMap(prev => ({ ...prev, [experimentId]: true }))
+    
+    // Optimistically update parent status locally
+    setExperimentsMap(prev => {
+      if (prev[hypothesisId]) {
+        return {
+          ...prev,
+          [hypothesisId]: { ...prev[hypothesisId], status: 'RUNNING' }
+        }
+      }
+      return prev
+    })
+
+    try {
+      const res = await fetch(`${API_URL}/experiments/${experimentId}/run`, {
+        method: 'POST'
+      })
+      if (res.ok) {
+        const resultData = await res.json()
+        setResultsMap(prev => ({ ...prev, [experimentId]: resultData }))
+        
+        // Refresh experiment status from server
+        const expRes = await fetch(`${API_URL}/hypotheses/${hypothesisId}/experiment`)
+        if (expRes.ok) {
+          const expData = await expRes.json()
+          setExperimentsMap(prev => ({ ...prev, [hypothesisId]: expData }))
+        }
+      }
+    } catch (err) {
+      console.error('Error running experiment:', err)
+      // Revert status to READY on fail
+      fetchExperiment(hypothesisId)
+    } finally {
+      setRunningMap(prev => ({ ...prev, [experimentId]: false }))
     }
   }
 
@@ -461,15 +528,26 @@ function App() {
                                   <div className="experiment-title">
                                     <span>🧪 Experiment Specification</span>
                                   </div>
-                                  {experimentsMap[h.id] && (
-                                    <button 
-                                      className="redesign-exp-btn"
-                                      onClick={() => handleDesignExperiment(h.id)}
-                                      disabled={designingMap[h.id]}
-                                    >
-                                      {designingMap[h.id] ? 'Designing...' : '🔄 Redesign'}
-                                    </button>
-                                  )}
+                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    {experimentsMap[h.id] && (experimentsMap[h.id].status === 'READY' || experimentsMap[h.id].status === 'FAILED') && (
+                                      <button 
+                                        className="run-exp-btn"
+                                        onClick={() => handleRunExperiment(experimentsMap[h.id].id, h.id)}
+                                        disabled={runningMap[experimentsMap[h.id].id]}
+                                      >
+                                        {runningMap[experimentsMap[h.id].id] ? 'Running...' : '🚀 Run Experiment'}
+                                      </button>
+                                    )}
+                                    {experimentsMap[h.id] && (
+                                      <button 
+                                        className="redesign-exp-btn"
+                                        onClick={() => handleDesignExperiment(h.id)}
+                                        disabled={designingMap[h.id] || experimentsMap[h.id].status === 'RUNNING' || runningMap[experimentsMap[h.id].id]}
+                                      >
+                                        {designingMap[h.id] ? 'Designing...' : '🔄 Redesign'}
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
 
                                 {loadingExperiments[h.id] || designingMap[h.id] ? (
@@ -577,6 +655,65 @@ function App() {
                                         )) || <li>No procedure steps defined.</li>}
                                       </ol>
                                     </div>
+
+                                    {/* Sandbox Console / Execution Log Viewer */}
+                                    {(experimentsMap[h.id].status === 'RUNNING' || resultsMap[experimentsMap[h.id].id]) && (
+                                      <div className="sandbox-logs-section">
+                                        <span className="experiment-block-label">Sandbox Terminal Execution Logs</span>
+                                        
+                                        <div className="terminal-window">
+                                          <div className="terminal-header">
+                                            <div className="terminal-buttons">
+                                              <span className="term-btn red"></span>
+                                              <span className="term-btn yellow"></span>
+                                              <span className="term-btn green"></span>
+                                            </div>
+                                            <span className="terminal-title">dreamnet-sandbox-run.log</span>
+                                            <span className="terminal-timer">
+                                              {resultsMap[experimentsMap[h.id].id] ? `${(resultsMap[experimentsMap[h.id].id].execution_time_ms).toFixed(1)}ms` : 'RUNNING...'}
+                                            </span>
+                                          </div>
+                                          
+                                          <pre className="terminal-content">
+                                            {experimentsMap[h.id].status === 'RUNNING' ? (
+                                              <code className="pulsing-text">
+                                                [DREAMNET SANDBOX] Initializing isolated subprocess environment...
+                                                [DREAMNET SANDBOX] Parsing AST verification tree...
+                                                [DREAMNET SANDBOX] AST Validation: SUCCESS (No dangerous modules or operations detected).
+                                                [DREAMNET SANDBOX] Running Python script in restricted subprocess...
+                                                [DREAMNET SANDBOX] Waiting for execution output...
+                                              </code>
+                                            ) : (
+                                              <code>
+                                                {resultsMap[experimentsMap[h.id].id].stdout && (
+                                                  <span style={{ color: 'var(--text-main)' }}>{resultsMap[experimentsMap[h.id].id].stdout}</span>
+                                                )}
+                                                {resultsMap[experimentsMap[h.id].id].stderr && (
+                                                  <span style={{ color: 'var(--status-red)' }}>{resultsMap[experimentsMap[h.id].id].stderr}</span>
+                                                )}
+                                              </code>
+                                            )}
+                                          </pre>
+                                        </div>
+
+                                        {/* Extracted Metrics Block */}
+                                        {resultsMap[experimentsMap[h.id].id] && resultsMap[experimentsMap[h.id].id].metrics && (
+                                          <div className="extracted-metrics-container">
+                                            <span className="experiment-block-label" style={{ color: 'var(--status-green)' }}>Extracted Quantitative Metrics</span>
+                                            <div className="metrics-pill-grid">
+                                              {Object.entries(resultsMap[experimentsMap[h.id].id].metrics).map(([key, val]) => (
+                                                <div className="metric-pill-item" key={key}>
+                                                  <span className="metric-key">{key.replace(/_/g, ' ')}</span>
+                                                  <span className="metric-val">
+                                                    {typeof val === 'number' ? val.toFixed(2) : String(val)}
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>

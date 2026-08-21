@@ -23,3 +23,5 @@ class Experiment(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     hypothesis = relationship("Hypothesis", back_populates="experiment")
+    result = relationship("ExperimentResult", back_populates="experiment", uselist=False, cascade="all, delete-orphan")
+

@@ -187,3 +187,134 @@ class MockProvider(BaseLLMProvider):
             "measurable_success_criteria": "Statistical significance p-value < 0.05, metric improvement >= 10%."
         }
 
+    def generate_experiment_code(self, experiment: dict[str, Any]) -> str:
+        print(f"[MockProvider] Generating experiment code for objective: '{experiment.get('objective')}'")
+        objective_lower = experiment.get("objective", "").lower()
+
+        if "quantization" in objective_lower:
+            return """# DREAMNET Quantization Experiment Simulation
+import time
+import json
+
+print("Initializing baseline FP32 model...")
+time.sleep(0.1)
+print("Evaluating baseline FP32 model on ImageNet validation subset...")
+fp32_latency = 34.2  # ms/batch
+fp32_accuracy = 76.4  # %
+print(f"Baseline FP32 Results: Latency = {fp32_latency}ms, Accuracy = {fp32_accuracy}%")
+
+print("\\nApplying post-training INT8 quantization...")
+time.sleep(0.1)
+print("Calibrating model using 500 calibration images...")
+time.sleep(0.1)
+print("Evaluating quantized INT8 model...")
+int8_latency = 13.8  # ms/batch
+int8_accuracy = 75.6  # %
+print(f"INT8 Results: Latency = {int8_latency}ms, Accuracy = {int8_accuracy}%")
+
+speedup = fp32_latency / int8_latency
+accuracy_drop = fp32_accuracy - int8_accuracy
+print(f"\\nAnalysis: Speedup = {speedup:.2f}x, Accuracy Drop = {accuracy_drop:.2f}%")
+
+metrics = {
+    "baseline_latency_ms": fp32_latency,
+    "baseline_accuracy": fp32_accuracy,
+    "treatment_latency_ms": int8_latency,
+    "treatment_accuracy": int8_accuracy,
+    "speedup_factor": speedup,
+    "accuracy_delta": accuracy_drop
+}
+
+print("__DREAMNET_METRICS_START__")
+print(json.dumps(metrics))
+print("__DREAMNET_METRICS_END__")
+"""
+
+        elif "distillation" in objective_lower:
+            return """# DREAMNET Knowledge Distillation Experiment Simulation
+import time
+import json
+
+print("Configuring Teacher (ResNet-50) and Student (MobileNetV2)...")
+time.sleep(0.1)
+print("Loading soft targets and training guidance schedules...")
+
+# Simulate distillation training loops
+for epoch in range(1, 6):
+    time.sleep(0.05)
+    accuracy = 55.0 + (epoch * 4.2)
+    print(f"Epoch {epoch}/5 - Loss: {1.2 / epoch:.4f} - Student Val Accuracy: {accuracy:.2f}%")
+
+student_distilled_acc = 75.8
+student_baseline_acc = 68.2
+print(f"\\nDistillation Complete. Student Accuracy: {student_distilled_acc}% (Baseline: {student_baseline_acc}%)")
+
+metrics = {
+    "student_baseline_accuracy": student_baseline_acc,
+    "student_distilled_accuracy": student_distilled_acc,
+    "accuracy_gain": student_distilled_acc - student_baseline_acc,
+    "parameter_count_millions": 3.5
+}
+
+print("__DREAMNET_METRICS_START__")
+print(json.dumps(metrics))
+print("__DREAMNET_METRICS_END__")
+"""
+
+        elif "pruning" in objective_lower or "resolution" in objective_lower:
+            return """# DREAMNET Resolution Scaling Experiment Simulation
+import time
+import json
+
+print("Evaluating baseline high-resolution pipeline...")
+time.sleep(0.1)
+baseline_latency = 45.0
+baseline_accuracy = 81.2
+
+print("Running image complexity classification router...")
+time.sleep(0.1)
+print("Evaluating dynamic resolution scaling treatment...")
+treatment_latency = 28.5
+treatment_accuracy = 80.8
+
+print(f"\\nDynamic Scaling Completed.")
+print(f"Baseline Latency: {baseline_latency}ms, Accuracy: {baseline_accuracy}%")
+print(f"Treatment Latency: {treatment_latency}ms, Accuracy: {treatment_accuracy}%")
+
+metrics = {
+    "baseline_latency_ms": baseline_latency,
+    "baseline_accuracy": baseline_accuracy,
+    "treatment_latency_ms": treatment_latency,
+    "treatment_accuracy": treatment_accuracy,
+    "latency_reduction_pct": ((baseline_latency - treatment_latency) / baseline_latency) * 100
+}
+
+print("__DREAMNET_METRICS_START__")
+print(json.dumps(metrics))
+print("__DREAMNET_METRICS_END__")
+"""
+
+        # Fallback generic mock script
+        return """# DREAMNET Generic Experiment Simulation
+import time
+import json
+
+print("Setting up control parameters...")
+time.sleep(0.1)
+print("Executing treatment trials...")
+time.sleep(0.1)
+print("Aggregating output telemetry...")
+
+metrics = {
+    "control_performance": 100.0,
+    "treatment_performance": 115.5,
+    "improvement_percentage": 15.5,
+    "p_value": 0.024
+}
+
+print("__DREAMNET_METRICS_START__")
+print(json.dumps(metrics))
+print("__DREAMNET_METRICS_END__")
+"""
+
+

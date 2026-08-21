@@ -42,3 +42,16 @@ class BaseLLMProvider(ABC):
         """
         pass
 
+    @abstractmethod
+    def generate_experiment_code(self, experiment: dict[str, Any]) -> str:
+        """
+        Given an experiment dictionary, generate executable Python code.
+        The code must be safe, run inside the AST sandbox, and output
+        computed metrics inside bounded JSON blocks:
+        __DREAMNET_METRICS_START__
+        {"metric_name": value}
+        __DREAMNET_METRICS_END__
+        """
+        pass
+
+
