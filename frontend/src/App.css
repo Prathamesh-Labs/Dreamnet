@@ -1199,5 +1199,165 @@ body {
   font-weight: 600;
 }
 
+/* Evaluate Evidence Button */
+.evaluate-btn {
+  background: linear-gradient(135deg, var(--accent-purple) 0%, hsl(265, 80%, 45%) 100%);
+  color: var(--text-bright);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(138, 43, 226, 0.4);
+  transition: all 0.2s;
+}
+
+.evaluate-btn:hover:not(:disabled) {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.evaluate-btn:disabled {
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  border: 1px solid var(--border-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Evaluation Verdict Section */
+.evaluation-summary-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.verdict-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.verdict-banner.supported {
+  background: hsla(145, 80%, 45%, 0.08);
+  border: 1px solid hsla(145, 80%, 45%, 0.25);
+  color: hsl(145, 85%, 70%);
+}
+
+.verdict-banner.rejected {
+  background: hsla(15, 80%, 45%, 0.08);
+  border: 1px solid hsla(15, 80%, 45%, 0.25);
+  color: hsl(15, 85%, 70%);
+}
+
+.verdict-banner.inconclusive {
+  background: hsla(270, 80%, 45%, 0.08);
+  border: 1px solid hsla(270, 80%, 45%, 0.25);
+  color: hsl(270, 85%, 70%);
+}
+
+.verdict-icon {
+  font-size: 1.5rem;
+}
+
+.verdict-text-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.verdict-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.verdict-confidence {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Dynamic Checks Checklist */
+.checks-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-muted);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+
+.checklist-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.checklist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.check-item.passed {
+  color: var(--status-green);
+}
+
+.check-item.failed {
+  color: var(--status-red);
+}
+
+.check-status-icon {
+  font-weight: bold;
+}
+
+/* Observation Interpretation summary box */
+.observation-box {
+  background-color: #0d111a;
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  text-align: left;
+}
+
+.observation-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--accent-purple);
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.observation-text {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  line-height: 1.5;
+  margin: 0;
+}
+
+
 
 

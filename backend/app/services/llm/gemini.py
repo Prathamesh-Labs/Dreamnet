@@ -113,4 +113,37 @@ class GeminiProvider(BaseLLMProvider):
             print(f"[GeminiProvider] Error generating experiment code: {e}")
             raise e
 
+    def explain_evaluation(self, hypothesis: str, criteria: str, metrics: dict[str, Any], verdict: str, checks: list[dict[str, Any]]) -> str:
+        print(f"[GeminiProvider] Explaining evaluation for verdict: '{verdict}'")
+        
+        prompt = (
+            f"You are DREAMNET, an autonomous scientific discovery assistant.\n"
+            f"An experiment was conducted to evaluate the following hypothesis:\n"
+            f"Hypothesis: {hypothesis}\n"
+            f"Measurable Success Criteria: {criteria}\n\n"
+            f"The sandbox execution yielded these quantitative metrics:\n"
+            f"{json.dumps(metrics, indent=2)}\n\n"
+            f"A deterministic checker evaluated the metrics and returned the following verdict:\n"
+            f"Verdict: {verdict}\n"
+            f"Checks state:\n"
+            f"{json.dumps(checks, indent=2)}\n\n"
+            f"Write a concise, professional explanation (2-3 sentences max) interpreting these results.\n"
+            f"Detail how the metrics values relate directly to the success criteria thresholds, "
+            f"and explain the scientific justification for the verdict: {verdict}.\n"
+            f"Do not include any greeting or signature."
+        )
+
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.4
+                )
+            )
+            return response.text.strip()
+        except Exception as e:
+            print(f"[GeminiProvider] Error generating evaluation explanation: {e}")
+            raise e
+
+
 

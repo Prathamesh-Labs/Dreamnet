@@ -10,6 +10,10 @@ class ExperimentResultBase(BaseModel):
     artifacts: list[str] = Field(default_factory=list)
     status: str  # COMPLETED, FAILED
     execution_time_ms: float
+    verdict: str | None = None
+    evaluation_summary: str | None = None
+    evaluation_confidence: float | None = None
+    evaluated_at: datetime | None = None
 
 class ExperimentResultOut(ExperimentResultBase):
     id: UUID
@@ -17,3 +21,4 @@ class ExperimentResultOut(ExperimentResultBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+

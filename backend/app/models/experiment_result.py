@@ -17,4 +17,11 @@ class ExperimentResult(Base):
     execution_time_ms = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Evaluation fields
+    verdict = Column(String, nullable=True)  # SUPPORTED, REJECTED, INCONCLUSIVE
+    evaluation_summary = Column(Text, nullable=True)
+    evaluation_confidence = Column(Float, nullable=True)
+    evaluated_at = Column(DateTime(timezone=True), nullable=True)
+
     experiment = relationship("Experiment", back_populates="result")
+

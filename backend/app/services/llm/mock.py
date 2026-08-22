@@ -317,4 +317,31 @@ print(json.dumps(metrics))
 print("__DREAMNET_METRICS_END__")
 """
 
+    def explain_evaluation(self, hypothesis: str, criteria: str, metrics: dict[str, Any], verdict: str, checks: list[dict[str, Any]]) -> str:
+        print(f"[MockProvider] Explaining evaluation for verdict: '{verdict}'")
+        
+        passed_rules = [c["rule"] for c in checks if c["passed"]]
+        failed_rules = [c["rule"] for c in checks if not c["passed"]]
+        
+        if verdict == "SUPPORTED":
+            return (
+                f"The experimental evidence successfully supports the hypothesis: '{hypothesis}'. "
+                f"Specifically, the evaluated success criteria '{criteria}' passed all verification checks: "
+                f"{', '.join(passed_rules)}. The observed metrics indicate the treatment performs better "
+                f"than the baseline within all specified bounds."
+            )
+        elif verdict == "REJECTED":
+            return (
+                f"The experimental evidence rejects the hypothesis: '{hypothesis}'. "
+                f"One or more criteria constraints failed validation: {', '.join(failed_rules)}. "
+                f"The observed metrics ({json.dumps(metrics)}) do not meet the success thresholds defined."
+            )
+        else:
+            return (
+                f"The experimental evidence is inconclusive. We could not match the observed metrics "
+                f"to the required success criteria: '{criteria}'. This might indicate that the output "
+                f"metrics JSON schema does not correspond to the targeted variables."
+            )
+
+
 

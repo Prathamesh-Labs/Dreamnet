@@ -9,6 +9,7 @@ from app.models.experiment_result import ExperimentResult
 from app.services.experiment.designer import ExperimentDesigner
 from app.services.experiment.validator import ExperimentValidationError
 from app.services.experiment.runner import ExperimentRunner
+from app.services.experiment.evaluator import ExperimentEvaluator
 
 router = APIRouter()
 
@@ -83,5 +84,21 @@ def get_experiment_results(experiment_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Database error: {str(e)}"
+        )
+
+@router.post("/experiments/{experiment_id}/evaluate", response_model=ExperimentResultOut)
+def evaluate_experiment_results(experiment_id: UUID, db: Session = Depends(get_db)):
+    try:
+        result = ExperimentEvaluator.evaluate_experiment(experiment_id, db)
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error evaluating experiment: {str(e)}"
         )
 

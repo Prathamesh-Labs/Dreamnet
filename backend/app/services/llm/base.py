@@ -52,6 +52,13 @@ class BaseLLMProvider(ABC):
         {"metric_name": value}
         __DREAMNET_METRICS_END__
         """
+    @abstractmethod
+    def explain_evaluation(self, hypothesis: str, criteria: str, metrics: dict[str, Any], verdict: str, checks: list[dict[str, Any]]) -> str:
+        """
+        Generates a natural language explanation of why the experiment results
+        support, reject, or are inconclusive regarding the hypothesis.
+        """
         pass
+
 
 

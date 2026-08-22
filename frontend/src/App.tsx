@@ -66,10 +66,11 @@ function App() {
   const [loadingExperiments, setLoadingExperiments] = useState<Record<string, boolean>>({})
   const [designingMap, setDesigningMap] = useState<Record<string, boolean>>({})
 
-  // Sandbox execution state
+  // Sandbox execution & evaluation state
   const [resultsMap, setResultsMap] = useState<Record<string, any>>({})
   const [loadingResults, setLoadingResults] = useState<Record<string, boolean>>({})
   const [runningMap, setRunningMap] = useState<Record<string, boolean>>({})
+  const [evaluatingMap, setEvaluatingMap] = useState<Record<string, boolean>>({})
 
   const API_URL = 'http://127.0.0.1:8000'
 
@@ -309,6 +310,90 @@ function App() {
     } finally {
       setRunningMap(prev => ({ ...prev, [experimentId]: false }))
     }
+  }
+
+  const handleEvaluateExperiment = async (experimentId: string, hypothesisId: string) => {
+    setEvaluatingMap(prev => ({ ...prev, [experimentId]: true }))
+    try {
+      const res = await fetch(`${API_URL}/experiments/${experimentId}/evaluate`, {
+        method: 'POST'
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setResultsMap(prev => ({ ...prev, [experimentId]: data }))
+      }
+    } catch (err) {
+      console.error('Error evaluating experiment:', err)
+    } finally {
+      setEvaluatingMap(prev => ({ ...prev, [experimentId]: false }))
+    }
+  }
+
+  const renderEvaluationChecks = (result: any, criteria: string) => {
+    if (!result || !result.metrics) return null
+    const metrics = result.metrics
+    const checks: React.ReactNode[] = []
+
+    if (metrics.p_value !== undefined) {
+      const passed = metrics.p_value < 0.05
+      checks.push(
+        <div className={`check-item ${passed ? 'passed' : 'failed'}`} key="p_value">
+          <span className="check-status-icon">{passed ? '✓' : '✗'}</span>
+          <span className="check-text">p-value &lt; 0.05 (Observed: {metrics.p_value.toFixed(4)})</span>
+        </div>
+      )
+    }
+    
+    if (metrics.improvement_percentage !== undefined) {
+      const passed = metrics.improvement_percentage >= 10
+      checks.push(
+        <div className={`check-item ${passed ? 'passed' : 'failed'}`} key="imp">
+          <span className="check-status-icon">{passed ? '✓' : '✗'}</span>
+          <span className="check-text">improvement &gt;= 10% (Observed: {metrics.improvement_percentage.toFixed(1)}%)</span>
+        </div>
+      )
+    }
+
+    if (metrics.latency_reduction_pct !== undefined) {
+      const passed = metrics.latency_reduction_pct >= 20
+      checks.push(
+        <div className={`check-item ${passed ? 'passed' : 'failed'}`} key="lat">
+          <span className="check-status-icon">{passed ? '✓' : '✗'}</span>
+          <span className="check-text">latency reduction &gt;= 20% (Observed: {metrics.latency_reduction_pct.toFixed(1)}%)</span>
+        </div>
+      )
+    }
+
+    if (metrics.accuracy_delta !== undefined) {
+      const passed = metrics.accuracy_delta < 2
+      checks.push(
+        <div className={`check-item ${passed ? 'passed' : 'failed'}`} key="acc">
+          <span className="check-status-icon">{passed ? '✓' : '✗'}</span>
+          <span className="check-text">accuracy loss &lt; 2% (Observed: {metrics.accuracy_delta.toFixed(2)}%)</span>
+        </div>
+      )
+    }
+
+    if (metrics.accuracy_gain !== undefined) {
+      const passed = metrics.accuracy_gain >= 5
+      checks.push(
+        <div className={`check-item ${passed ? 'passed' : 'failed'}`} key="acc_gain">
+          <span className="check-status-icon">{passed ? '✓' : '✗'}</span>
+          <span className="check-text">accuracy gain &gt;= 5% (Observed: {metrics.accuracy_gain.toFixed(2)}%)</span>
+        </div>
+      )
+    }
+
+    if (checks.length === 0) return null
+
+    return (
+      <div className="checks-checklist">
+        <span className="checklist-title">Verification Assertions Checklist</span>
+        <div className="checklist-grid">
+          {checks}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -712,6 +797,49 @@ function App() {
                                             </div>
                                           </div>
                                         )}
+
+                                        {/* Evaluate Evidence Trigger */}
+                                        {resultsMap[experimentsMap[h.id].id] && !resultsMap[experimentsMap[h.id].id].verdict && (
+                                          <button 
+                                            className="evaluate-btn"
+                                            onClick={() => handleEvaluateExperiment(experimentsMap[h.id].id, h.id)}
+                                            disabled={evaluatingMap[experimentsMap[h.id].id]}
+                                            style={{ marginTop: '0.5rem', width: '100%' }}
+                                          >
+                                            {evaluatingMap[experimentsMap[h.id].id] ? 'Evaluating Evidence...' : '🧠 Evaluate Evidence & Generate Verdict'}
+                                          </button>
+                                        )}
+
+                                        {/* Evaluation Outcomes Panel */}
+                                        {resultsMap[experimentsMap[h.id].id] && resultsMap[experimentsMap[h.id].id].verdict && (
+                                          <div className="evaluation-summary-section">
+                                            <span className="experiment-block-label">Evaluation Engine Outcome</span>
+                                            
+                                            <div className={`verdict-banner ${resultsMap[experimentsMap[h.id].id].verdict.toLowerCase()}`}>
+                                              <div className="verdict-icon">
+                                                {resultsMap[experimentsMap[h.id].id].verdict === 'SUPPORTED' ? '🛡️' : 
+                                                 resultsMap[experimentsMap[h.id].id].verdict === 'REJECTED' ? '⚠️' : '❓'}
+                                              </div>
+                                              <div className="verdict-text-group">
+                                                <span className="verdict-title">VERDICT: {resultsMap[experimentsMap[h.id].id].verdict}</span>
+                                                <span className="verdict-confidence">Confidence: {(resultsMap[experimentsMap[h.id].id].evaluation_confidence * 100).toFixed(0)}%</span>
+                                              </div>
+                                            </div>
+
+                                            {/* Dynamic Assertions Checklist */}
+                                            {renderEvaluationChecks(resultsMap[experimentsMap[h.id].id], experimentsMap[h.id].measurable_success_criteria)}
+
+                                            {/* LLM Observation summary box */}
+                                            {resultsMap[experimentsMap[h.id].id].evaluation_summary && (
+                                              <div className="observation-box">
+                                                <span className="observation-title">📋 Observation Interpretation Summary</span>
+                                                <p className="observation-text">
+                                                  {resultsMap[experimentsMap[h.id].id].evaluation_summary}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -734,5 +862,3 @@ function App() {
 }
 
 export default App
-
-
