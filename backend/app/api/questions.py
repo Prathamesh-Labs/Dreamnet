@@ -33,6 +33,7 @@ def create_question(question_in: QuestionCreate, db: Session = Depends(get_db)):
         provider = LLMProviderFactory.get_provider()
         hypotheses_data = provider.generate_hypotheses(db_question.text)
         for h_data in hypotheses_data:
+            review_dialogue = provider.simulate_peer_review(db_question.text, h_data.get("statement"))
             db_h = Hypothesis(
                 question_id=db_question.id,
                 statement=h_data.get("statement"),
@@ -42,7 +43,8 @@ def create_question(question_in: QuestionCreate, db: Session = Depends(get_db)):
                 predicted_outcome=h_data.get("predicted_outcome"),
                 confidence=h_data.get("confidence", 0.5),
                 testability=h_data.get("testability", "MEDIUM"),
-                status="PROPOSED"
+                status="PROPOSED",
+                peer_review=review_dialogue
             )
             db.add(db_h)
         db.commit()
@@ -99,6 +101,7 @@ def generate_question_hypotheses(question_id: UUID, db: Session = Depends(get_db
         hypotheses_data = provider.generate_hypotheses(question.text)
         new_hypotheses = []
         for h_data in hypotheses_data:
+            review_dialogue = provider.simulate_peer_review(question.text, h_data.get("statement"))
             db_h = Hypothesis(
                 question_id=question.id,
                 statement=h_data.get("statement"),
@@ -108,7 +111,8 @@ def generate_question_hypotheses(question_id: UUID, db: Session = Depends(get_db
                 predicted_outcome=h_data.get("predicted_outcome"),
                 confidence=h_data.get("confidence", 0.5),
                 testability=h_data.get("testability", "MEDIUM"),
-                status="PROPOSED"
+                status="PROPOSED",
+                peer_review=review_dialogue
             )
             db.add(db_h)
             new_hypotheses.append(db_h)

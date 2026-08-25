@@ -4,17 +4,15 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
 
-class ExperimentResult(Base):
-    __tablename__ = "experiment_results"
+class Evaluation(Base):
+    __tablename__ = "evaluations"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     experiment_id = Column(UUID(as_uuid=True), ForeignKey("experiments.id", ondelete="CASCADE"), nullable=False, unique=True)
-    metrics = Column(JSONB, nullable=False, default=dict)
-    raw_output = Column(Text, nullable=True)
-    artifacts = Column(JSONB, nullable=False, default=list)
-    execution_time_ms = Column(Float, nullable=False)
-    parameters = Column(JSONB, nullable=False, default=dict)
-    environment_info = Column(JSONB, nullable=False, default=dict)
+    verdict = Column(String, nullable=False) # SUPPORTED, REJECTED, INCONCLUSIVE
+    evidence = Column(JSONB, nullable=False, default=list) # checklist array of assertions
+    confidence = Column(Float, nullable=False)
+    observations = Column(Text, nullable=True) # LLM observation interpretation explanation
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    experiment = relationship("Experiment", back_populates="result")
+    experiment = relationship("Experiment", back_populates="evaluation")

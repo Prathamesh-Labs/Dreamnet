@@ -72,17 +72,20 @@ class ExperimentRunner:
             stderr = f"Execution Error: {str(e)}"
             status = "FAILED"
 
+        # Combine stdout and stderr into raw_output
+        raw_output = stdout
+        if stderr:
+            raw_output += f"\n--- ERROR LOG ---\n{stderr}"
+
         # 6. Delete any existing experiment results (to prevent duplicate key)
         db.query(ExperimentResult).filter(ExperimentResult.experiment_id == experiment.id).delete()
 
         # 7. Save experiment result
         db_result = ExperimentResult(
             experiment_id=experiment.id,
-            stdout=stdout,
-            stderr=stderr,
             metrics=metrics,
+            raw_output=raw_output,
             artifacts=[],  # Default empty artifacts list
-            status=status,
             execution_time_ms=execution_time_ms
         )
         db.add(db_result)

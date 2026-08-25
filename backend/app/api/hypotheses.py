@@ -4,8 +4,10 @@ from uuid import UUID
 from app.database.connection import get_db
 from app.schemas.experiment import ExperimentOut
 from app.schemas.experiment_result import ExperimentResultOut
+from app.schemas.evaluation import EvaluationOut
 from app.models.experiment import Experiment
 from app.models.experiment_result import ExperimentResult
+from app.models.evaluation import Evaluation
 from app.services.experiment.designer import ExperimentDesigner
 from app.services.experiment.validator import ExperimentValidationError
 from app.services.experiment.runner import ExperimentRunner
@@ -86,11 +88,11 @@ def get_experiment_results(experiment_id: UUID, db: Session = Depends(get_db)):
             detail=f"Database error: {str(e)}"
         )
 
-@router.post("/experiments/{experiment_id}/evaluate", response_model=ExperimentResultOut)
+@router.post("/experiments/{experiment_id}/evaluate", response_model=EvaluationOut)
 def evaluate_experiment_results(experiment_id: UUID, db: Session = Depends(get_db)):
     try:
-        result = ExperimentEvaluator.evaluate_experiment(experiment_id, db)
-        return result
+        evaluation = ExperimentEvaluator.evaluate_experiment(experiment_id, db)
+        return evaluation
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -102,3 +104,20 @@ def evaluate_experiment_results(experiment_id: UUID, db: Session = Depends(get_d
             detail=f"Error evaluating experiment: {str(e)}"
         )
 
+@router.get("/experiments/{experiment_id}/evaluation", response_model=EvaluationOut)
+def get_experiment_evaluation(experiment_id: UUID, db: Session = Depends(get_db)):
+    try:
+        evaluation = db.query(Evaluation).filter(Evaluation.experiment_id == experiment_id).first()
+        if not evaluation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Evaluation results not found."
+            )
+        return evaluation
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )

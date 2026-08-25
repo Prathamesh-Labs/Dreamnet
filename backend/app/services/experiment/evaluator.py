@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models.experiment import Experiment
 from app.models.experiment_result import ExperimentResult
+from app.models.evaluation import Evaluation
 from app.services.llm.factory import LLMProviderFactory
 from typing import Any
 
@@ -142,7 +143,7 @@ class ExperimentEvaluator:
         return verdict, confidence, checks
 
     @staticmethod
-    def evaluate_experiment(experiment_id: Any, db: Session) -> ExperimentResult:
+    def evaluate_experiment(experiment_id: Any, db: Session) -> Evaluation:
         # 1. Fetch Experiment and Result
         experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
         if not experiment:
@@ -176,13 +177,18 @@ class ExperimentEvaluator:
                 [f"{c['rule']} ({'Passed' if c['passed'] else 'Failed'}, Observed: {c['observed']})" for c in checks]
             )
 
-        # 4. Save outcomes
-        result.verdict = verdict
-        result.evaluation_summary = summary
-        result.evaluation_confidence = confidence
-        result.evaluated_at = datetime.utcnow()
+        # 4. Save evaluation
+        db.query(Evaluation).filter(Evaluation.experiment_id == experiment.id).delete()
 
+        db_evaluation = Evaluation(
+            experiment_id=experiment.id,
+            verdict=verdict,
+            evidence=checks,
+            confidence=confidence,
+            observations=summary
+        )
+        db.add(db_evaluation)
         db.commit()
-        db.refresh(result)
+        db.refresh(db_evaluation)
 
-        return result
+        return db_evaluation

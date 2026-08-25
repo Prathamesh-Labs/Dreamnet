@@ -14,4 +14,6 @@ class Question(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     project = relationship("Project", backref="research_questions")
+    research_sessions = relationship("ResearchSession", back_populates="question", cascade="all, delete-orphan")
+
 

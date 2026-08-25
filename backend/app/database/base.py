@@ -5,5 +5,11 @@ from app.models.question import Question
 from app.models.hypothesis import Hypothesis
 from app.models.experiment import Experiment
 from app.models.experiment_result import ExperimentResult
+from app.models.evaluation import Evaluation
+from app.models.research_session import ResearchSession
+from app.models.discovery import Discovery
+
+
+
 
 

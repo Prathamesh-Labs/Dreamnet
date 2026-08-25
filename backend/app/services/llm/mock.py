@@ -343,5 +343,140 @@ print("__DREAMNET_METRICS_END__")
                 f"metrics JSON schema does not correspond to the targeted variables."
             )
 
+    def generate_followup_hypothesis(self, question: str, failed_hypothesis: str, failed_criteria: str, failed_metrics: dict[str, Any]) -> dict[str, Any]:
+        print(f"[MockProvider] Generating follow-up hypothesis for: '{failed_hypothesis}'")
+        failed_lower = failed_hypothesis.lower()
+        if "quantization" in failed_lower:
+            return {
+                "statement": "Mixed-precision quantization (FP16/INT8) reduces inference latency and memory footprint by replacing FP32 tensors on compute-heavy layers while retaining accuracy drop under 0.5% on sensitive layers.",
+                "rationale": "Certain model parameters are highly sensitive to low-precision rounding errors. Applying mixed-precision maintains baseline accuracy while capturing most hardware speedups.",
+                "assumptions": [
+                    "Profiling tools can isolate layer-wise accuracy gradients.",
+                    "Hardware platform supports mixed-precision execution."
+                ],
+                "variables": [
+                    "mixed_precision_ratio (FP16:INT8)",
+                    "inference_latency",
+                    "test_accuracy"
+                ],
+                "predicted_outcome": "Mixed-precision achieves a 1.8x speedup (vs 2.5x full INT8) while reducing accuracy drop to just 0.4%.",
+                "confidence": 0.80,
+                "testability": "HIGH"
+            }
+        else:
+            return {
+                "statement": f"Parameter-level adaptive adjustments based on dynamic runtime constraints improves performance stability for: {question}.",
+                "rationale": "Static variables are prone to out-of-distribution failure bounds. Dynamic adaptation guarantees robust optimization.",
+                "assumptions": [
+                    "Adaptive tracking has low computational overhead.",
+                    "The feedback loop converges stably."
+                ],
+                "variables": [
+                    "feedback_adapt_ratio",
+                    "performance_stability"
+                ],
+                "predicted_outcome": "Dynamic adaptation improves test metrics by 12% over the static control baseline.",
+                "confidence": 0.70,
+                "testability": "MEDIUM"
+            }
+
+    def explain_discovery(self, title: str, pattern_type: str, evidence: dict[str, Any], description: str) -> str:
+        print(f"[MockProvider] Explaining discovery candidate: '{title}'")
+        if pattern_type == "unexpected_magnitude":
+            return (
+                f"The detector identified a significant anomaly in execution performance: '{title}'. "
+                f"Specifically, the observed values showed a substantial increase of {evidence.get('delta_pct', 0.0):.1f}% "
+                f"above the baseline design expectations. This indicates that hardware caching or execution vectorization "
+                f"pathways were highly optimized for this specific compute layout, exceeding expected linear bounds. "
+                f"We recommend validating this scaling behavior across diverse hardware profiles."
+            )
+        elif pattern_type == "contradiction":
+            return (
+                f"A direct empirical contradiction was identified: '{title}'. "
+                f"While one set of hypotheses was strongly supported, alternate parameters caused a direct validation failure. "
+                f"This suggests that feature sensitivity is highly non-linear, and the parameters do not scale uniformly. "
+                f"Further investigation should focus on isolating the boundary conditions that divide the success and failure states."
+            )
+        elif pattern_type == "unexpected_direction":
+            return (
+                f"An opposite performance direction was observed: '{title}'. "
+                f"Expected optimization metrics showed a severe regression instead of improvement. "
+                f"This commonly occurs when precision reduction introduces gradient underflow or severe rounding noise "
+                f"which collapses representation validity. We should investigate adaptive scale calibration."
+            )
+    def simulate_peer_review(self, question: str, statement: str) -> list[dict[str, Any]]:
+        statement_lower = statement.lower()
+        question_lower = question.lower()
+        
+        if "quantization" in statement_lower or "precision" in statement_lower or "latency" in statement_lower:
+            return [
+                {
+                    "sender": "Physicist/Systems Specialist",
+                    "message": "INT8 precision conversion introduces quantization rounding noise. For safety-critical telemetry guidance, we must verify that control feedback loops remain stable under low-precision constraints and that SIMD registers are properly aligned on the OBC (Onboard Computer).",
+                    "avatar": "🛰️"
+                },
+                {
+                    "sender": "Statistician / Verification Specialist",
+                    "message": "Agreed. We must enforce execution metrics monitoring across at least 30 full simulation cycles. We need to measure latency variance (jitter) to confirm that the observed speedup isn't just thread scheduling noise in the real-time operating system (RTOS).",
+                    "avatar": "📊"
+                },
+                {
+                    "sender": "Synthesis Agent",
+                    "message": "Excellent feedback. I have updated the experiment variables to monitor latency standard deviation and added execution register alignment checks. The hypothesis is approved for sandboxed simulation.",
+                    "avatar": "🧠"
+                }
+            ]
+        elif "thruster" in statement_lower or "thermal" in statement_lower or "nozzle" in statement_lower or "pressure" in statement_lower or "telemetry" in statement_lower:
+            return [
+                {
+                    "sender": "Propulsion & Thermal Engineer",
+                    "message": "Severe thruster thermal drift suggests localized heat accumulation near the thruster solenoid valve. If we duty-cycle the solenoid to reduce average temperature, we must ensure dynamic thrust response latency is not compromised.",
+                    "avatar": "🔥"
+                },
+                {
+                    "sender": "Avionics / Flight Software Lead",
+                    "message": "Correct. Telemetry logging rate must be increased to 100Hz during the test sequence. This is critical to capture sub-millisecond thruster valve response latency and verify the attitude control system (ACS) baseline is maintained.",
+                    "avatar": "📡"
+                },
+                {
+                    "sender": "Synthesis Agent",
+                    "message": "Agreed. I have adjusted the experiment procedure to calibrate solenoid duty cycles in 5% increments and added transient valve latency sensors to the metrics list. Approved for execution.",
+                    "avatar": "🧠"
+                }
+            ]
+        else:
+            return [
+                {
+                    "sender": "Mission Specialist",
+                    "message": f"Reviewing hypothesis for '{question}'. From a mission-planning perspective, any algorithm modifications must be validated under extreme conditions, including high solar activity and radiation fields.",
+                    "avatar": "🛰️"
+                },
+                {
+                    "sender": "Ground Systems Control",
+                    "message": "Agreed. Let's add simulated bit-flip noise to the independent variables list to verify memory fault tolerance during execution.",
+                    "avatar": "📟"
+                },
+                {
+                    "sender": "Synthesis Agent",
+                    "message": "Updated experiment specs to simulate single-event upsets (SEU). The hypothesis is approved for sandboxed run.",
+                    "avatar": "🧠"
+                }
+            ]
+
+    def generate_hypothesis_from_discovery(self, discovery_title: str, discovery_observation: str, evidence: dict[str, Any], parent_experiment: dict[str, Any]) -> dict[str, Any]:
+        print(f"[MockProvider] Generating hypothesis from discovery: '{discovery_title}'")
+        return {
+            "statement": f"Hypothesis derived from discovery '{discovery_title}': optimizing layer boundaries will stabilize performance.",
+            "rationale": f"Based on observation: '{discovery_observation}', the anomalous behaviour suggests dynamic variables are highly non-linear.",
+            "assumptions": ["Hardware configuration supports layer-wise tuning.", "Baseline latency is stable."],
+            "variables": ["layer_boundary_index", "latency_reduction_pct"],
+            "predicted_outcome": "Adjusted layer-wise parameters will reduce latency by an additional 10% without loss.",
+            "confidence": 0.75,
+            "testability": "HIGH"
+        }
+
+
+
+
 
 

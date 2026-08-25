@@ -145,5 +145,113 @@ class GeminiProvider(BaseLLMProvider):
             print(f"[GeminiProvider] Error generating evaluation explanation: {e}")
             raise e
 
+    def generate_followup_hypothesis(self, question: str, failed_hypothesis: str, failed_criteria: str, failed_metrics: dict[str, Any]) -> dict[str, Any]:
+        print(f"[GeminiProvider] Generating follow-up hypothesis for: '{failed_hypothesis}'")
+        prompt = (
+            f"You are DREAMNET, an autonomous scientific discovery assistant.\n"
+            f"You are conducting research on the question: '{question}'\n\n"
+            f"The previous hypothesis was rejected during empirical testing:\n"
+            f"Failed Hypothesis: {failed_hypothesis}\n"
+            f"Failed Success Criteria: {failed_criteria}\n"
+            f"Observed Metrics: {json.dumps(failed_metrics, indent=2)}\n\n"
+            f"Analyze why it failed and propose exactly one new refinement/follow-up hypothesis "
+            f"that attempts to resolve the failure or adjust the parameters (e.g. tuning quantization parameters, "
+            f"using different layers, or adjusting block sizes)."
+        )
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=HypothesisEngineResponse,
+                    temperature=0.7
+                )
+            )
+            data = json.loads(response.text)
+            hypotheses = data.get("hypotheses", [])
+            if hypotheses:
+                return hypotheses[0]
+            raise ValueError("No hypotheses returned in follow-up response.")
+        except Exception as e:
+            print(f"[GeminiProvider] Error generating follow-up hypothesis: {e}")
+            raise e
+
+    def explain_discovery(self, title: str, pattern_type: str, evidence: dict[str, Any], description: str) -> str:
+        print(f"[GeminiProvider] Explaining discovery candidate: '{title}'")
+        prompt = (
+            f"You are DREAMNET, an autonomous scientific discovery assistant.\n"
+            f"A deterministic anomaly detector identified a potential discovery candidate:\n"
+            f"Title: {title}\n"
+            f"Pattern Type: {pattern_type}\n"
+            f"Detected Evidence: {json.dumps(evidence, indent=2)}\n"
+            f"Description: {description}\n\n"
+            f"Write a professional, detailed explanation (3-4 sentences) interpreting this scientific pattern.\n"
+            f"Explain why this pattern is interesting or contradictory, what physical/computational mechanism could cause it, "
+            f"and propose a logical research pathway forward. Use only the provided evidence numbers; do not invent new facts."
+        )
+        try:
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.6
+                )
+            )
+            return response.text.strip()
+        except Exception as e:
+            print(f"[GeminiProvider] Error explaining discovery: {e}")
+            raise e
+
+    def simulate_peer_review(self, question: str, statement: str) -> list[dict[str, Any]]:
+        # Structured fallback scientific review dialogue
+        return [
+            {
+                "sender": "Physicist/Systems Specialist",
+                "message": f"Regarding question '{question}' and hypothesis '{statement}', we must investigate the hardware bus bottlenecks. Reducing float operations is promising, but if system memory throughput is saturated, CPU latency will remain unchanged.",
+                "avatar": "🛰️"
+            },
+            {
+                "sender": "Statistician / Verification Specialist",
+                "message": "Agreed. The experiment design must record standard deviation across a minimum of 30 execution cycles to isolate true performance speedup from thread scheduling noise.",
+                "avatar": "📊"
+            },
+            {
+                "sender": "Synthesis Agent",
+                "message": "Adjusted experiment parameters to capture statistical latency distribution and independent memory constraints. The hypothesis is approved for sandboxed run.",
+                "avatar": "🧠"
+            }
+        ]
+
+    def generate_hypothesis_from_discovery(self, discovery_title: str, discovery_observation: str, evidence: dict[str, Any], parent_experiment: dict[str, Any]) -> dict[str, Any]:
+        print(f"[GeminiProvider] Generating hypothesis from discovery: '{discovery_title}'")
+        prompt = (
+            f"You are DREAMNET, an autonomous scientific discovery assistant.\n"
+            f"A potential scientific discovery candidate was detected:\n"
+            f"Title: {discovery_title}\n"
+            f"Observation: {discovery_observation}\n"
+            f"Evidence: {json.dumps(evidence, indent=2)}\n"
+            f"Parent Experiment Context: {json.dumps(parent_experiment, indent=2)}\n\n"
+            f"Generate exactly one new, testable, and falsifiable scientific hypothesis that is "
+            f"derived directly from this discovery. This hypothesis should aim to explain the mechanism "
+            f"behind this unexpected pattern or anomaly."
+        )
+        
+        try:
+            from app.engines.hypothesis.schemas import SingleHypothesisOutput
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=SingleHypothesisOutput,
+                    temperature=0.7
+                )
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"[GeminiProvider] Error generating hypothesis from discovery: {e}")
+            raise e
+
+
+
+
 
 

@@ -1,0 +1,5 @@
+class ResearchPolicies:
+    MAX_ITERATIONS = 5
+    MAX_EXPERIMENTS = 20
+    MAX_RUNTIME_SEC = 3600
+    REQUIRE_HUMAN_APPROVAL = True

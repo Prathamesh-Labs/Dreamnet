@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import datetime
+from typing import Any
 
 class HypothesisBase(BaseModel):
     statement: str
@@ -18,6 +19,7 @@ class HypothesisOut(HypothesisBase):
     id: UUID
     question_id: UUID
     status: str
+    peer_review: list[dict[str, Any]] = Field(default_factory=list)
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

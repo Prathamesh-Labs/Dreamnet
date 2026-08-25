@@ -18,8 +18,12 @@ class Hypothesis(Base):
     confidence = Column(Float, default=0.5)
     testability = Column(String, default="MEDIUM")  # HIGH, MEDIUM, LOW
     status = Column(String, default="PROPOSED")  # PROPOSED, SUPPORTED, REJECTED, INCONCLUSIVE
+    peer_review = Column(JSONB, nullable=False, default=list)
+    parent_discovery_id = Column(UUID(as_uuid=True), ForeignKey("discoveries.id", ondelete="SET NULL"), nullable=True)
+    parent_experiment_id = Column(UUID(as_uuid=True), ForeignKey("experiments.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     question = relationship("Question", backref="hypotheses")
-    experiment = relationship("Experiment", back_populates="hypothesis", uselist=False, cascade="all, delete-orphan")
+    experiment = relationship("Experiment", back_populates="hypothesis", uselist=False, cascade="all, delete-orphan", foreign_keys="[Experiment.hypothesis_id]")
+
 

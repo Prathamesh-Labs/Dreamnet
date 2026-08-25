@@ -60,5 +60,37 @@ class BaseLLMProvider(ABC):
         """
         pass
 
+    @abstractmethod
+    def generate_followup_hypothesis(self, question: str, failed_hypothesis: str, failed_criteria: str, failed_metrics: dict[str, Any]) -> dict[str, Any]:
+        """
+        Given a failed hypothesis and the metrics that failed, generate a new
+        refinement hypothesis to attempt to resolve the issue.
+        """
+        pass
+
+    @abstractmethod
+    def explain_discovery(self, title: str, pattern_type: str, evidence: dict[str, Any], description: str) -> str:
+        """
+        Generates a natural language explanation of a detected discovery candidate pattern.
+        """
+        pass
+
+    @abstractmethod
+    def simulate_peer_review(self, question: str, statement: str) -> list[dict[str, Any]]:
+        """
+        Simulates peer review discussions for space agency/scientific validation.
+        """
+        pass
+
+    @abstractmethod
+    def generate_hypothesis_from_discovery(self, discovery_title: str, discovery_observation: str, evidence: dict[str, Any], parent_experiment: dict[str, Any]) -> dict[str, Any]:
+        """
+        Generates a new testable hypothesis derived from a detected discovery pattern.
+        """
+        pass
+
+
+
+
 
 
