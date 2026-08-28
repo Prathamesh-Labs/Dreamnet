@@ -28,3 +28,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Media/Showcase
+dreamnet_screenshot.png
+dreamnet_video.mp4
