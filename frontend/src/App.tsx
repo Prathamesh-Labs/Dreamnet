@@ -1362,8 +1362,8 @@ function App() {
       {/* Header */}
       <header className="dreamnet-header">
         <div className="logo-section">
-          <div className="logo-icon">
-            <img src="/favicon.svg" alt="DREAMNET Logo" style={{ width: '2.5rem', height: '2.5rem', display: 'block' }} />
+          <div className="logo-icon" style={{ padding: '0.2rem' }}>
+            <img src="/dreamnet_logo.jpg" alt="DREAMNET Logo" style={{ width: '2.5rem', height: '2.5rem', display: 'block', borderRadius: '8px' }} />
           </div>
           <div className="logo-title">
             <h1>DREAMNET</h1>
